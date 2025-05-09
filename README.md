@@ -15,7 +15,7 @@ Gebruik je VR-headset of test het voorlopig in de editor met mock inputs.
 ### 2. Project clonen
 
 ```bash
-git clone https://github.com/<jouw-gebruiker>/<repo>.git
+git clone https://github.com/atoolate/expdev-pancakeflip.git
 cd <projectmap>
 ```
 
