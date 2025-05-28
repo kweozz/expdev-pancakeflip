@@ -1,23 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro; // belangrijk zodat Unity de tekst herkent
 
 public class MixingLogic : MonoBehaviour
 {
     public List<string> requiredIngredients;
+    public TextMeshProUGUI feedbackText;
+
     private List<string> currentIngredients = new List<string>();
-
-    public void AddIngredient(GameObject ingredient)
-    {
-        string name = ingredient.name;
-        if (!currentIngredients.Contains(name))
-        {
-            currentIngredients.Add(name);
-            Debug.Log(name + " toegevoegd!");
-        }
-
-        CheckIfComplete();
-    }
-
     void CheckIfComplete()
     {
         foreach (var req in requiredIngredients)
@@ -26,6 +16,27 @@ public class MixingLogic : MonoBehaviour
         }
 
         Debug.Log("Mengsel compleet!");
-        // hier kun je een next-step triggeren, bijv. kom gieten activeren
+
+        if (feedbackText != null)
+            feedbackText.text += "\n✔ Mengsel compleet!";
+    }
+
+    public void AddIngredient(GameObject ingredient)
+    {
+        string name = ingredient.name.ToLower().Trim(); // veiligere check
+        if (!currentIngredients.Contains(name))
+        {
+            currentIngredients.Add(name);
+            Debug.Log(name + " toegevoegd!");
+
+            if (feedbackText != null)
+            {
+                feedbackText.text += "\n✓ " + name + " toegevoegd!";
+                Canvas.ForceUpdateCanvases(); // forceer update
+            }
+        }
+
+        CheckIfComplete();
     }
 }
+
