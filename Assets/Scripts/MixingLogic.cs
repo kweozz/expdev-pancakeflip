@@ -14,6 +14,7 @@ public class MixingLogic : MonoBehaviour
     private List<string> currentIngredients = new List<string>();
     private Renderer batterRenderer;
     private Vector3 initialBatterScale;
+    private bool isComplete = false;
 
     void Start()
     {
@@ -26,13 +27,15 @@ public class MixingLogic : MonoBehaviour
         }
     }
 
-    void SetBatterHeight(float t)
+void SetBatterHeight(float t)
 {
     if (batterVisual != null)
     {
         var scale = initialBatterScale;
-        float maxHeight = initialBatterScale.y; // e.g., 0.2 in Inspector
-        scale.y = t * maxHeight * 2f; // 0 when t=0, maxHeight when t=1
+        // Make the Y scale grow more dramatically (e.g., up to 3x the original height)
+        float minHeight = 0.01f * initialBatterScale.y;
+        float maxHeight = initialBatterScale.y * 3f; // Change 3f to a higher value if you want even more growth
+        scale.y = Mathf.Lerp(minHeight, maxHeight, Mathf.Clamp01(t));
         batterVisual.transform.localScale = scale;
     }
 }
@@ -64,11 +67,15 @@ public class MixingLogic : MonoBehaviour
 
     void CheckIfComplete()
     {
+        if (isComplete) return;
+        // Only complete if all required ingredients are present and the count matches
         foreach (var req in requiredIngredients)
         {
-            if (!currentIngredients.Contains(req)) return;
+            if (!currentIngredients.Contains(req.ToLower().Trim())) return;
         }
+        if (currentIngredients.Count != requiredIngredients.Count) return;
 
+        isComplete = true;
         Debug.Log("Mengsel compleet!");
 
         if (feedbackText != null)
