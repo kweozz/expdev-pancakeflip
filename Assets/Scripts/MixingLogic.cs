@@ -7,18 +7,34 @@ public class MixingLogic : MonoBehaviour
     public List<string> requiredIngredients;
     public TextMeshProUGUI feedbackText;
 
+    public GameObject batterVisual; // Assign a plane/cylinder in the bowl
+    public Color completeColor = Color.green; // Color when all ingredients are in
+    public Color defaultColor = new Color(0.8f, 0.7f, 0.5f, 1f); // Pancake batter color
+
     private List<string> currentIngredients = new List<string>();
-    void CheckIfComplete()
+    private Renderer batterRenderer;
+    private Vector3 initialBatterScale;
+
+    void Start()
     {
-        foreach (var req in requiredIngredients)
+        if (batterVisual != null)
         {
-            if (!currentIngredients.Contains(req)) return;
+            batterRenderer = batterVisual.GetComponent<Renderer>();
+            initialBatterScale = batterVisual.transform.localScale;
+            batterRenderer.material.color = defaultColor;
+            SetBatterHeight(0);
         }
+    }
 
-        Debug.Log("Mengsel compleet!");
-
-        if (feedbackText != null)
-            feedbackText.text += "\n✔ Mengsel compleet!";
+    void SetBatterHeight(float t)
+    {
+        if (batterVisual != null)
+        {
+            // t: 0 (empty) to 1 (full)
+            var scale = initialBatterScale;
+            scale.y = Mathf.Lerp(0.01f, initialBatterScale.y, t); // avoid 0
+            batterVisual.transform.localScale = scale;
+        }
     }
 
     public void AddIngredient(GameObject ingredient)
@@ -36,7 +52,31 @@ public class MixingLogic : MonoBehaviour
             }
         }
 
+        // Update batter visual
+        if (batterVisual != null && requiredIngredients.Count > 0)
+        {
+            float t = Mathf.Clamp01((float)currentIngredients.Count / requiredIngredients.Count);
+            SetBatterHeight(t);
+        }
+
         CheckIfComplete();
+    }
+
+    void CheckIfComplete()
+    {
+        foreach (var req in requiredIngredients)
+        {
+            if (!currentIngredients.Contains(req)) return;
+        }
+
+        Debug.Log("Mengsel compleet!");
+
+        if (feedbackText != null)
+            feedbackText.text += "\n✔ Mengsel compleet!";
+
+        // Turn batter green
+        if (batterRenderer != null)
+            batterRenderer.material.color = completeColor;
     }
 }
 
