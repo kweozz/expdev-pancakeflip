@@ -32,7 +32,7 @@ public class MixingLogic : MonoBehaviour
     {
         var scale = initialBatterScale;
         float maxHeight = initialBatterScale.y; // e.g., 0.2 in Inspector
-        scale.y = t * maxHeight; // 0 when t=0, maxHeight when t=1
+        scale.y = t * maxHeight * 2f; // 0 when t=0, maxHeight when t=1
         batterVisual.transform.localScale = scale;
     }
 }
