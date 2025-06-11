@@ -27,15 +27,15 @@ public class MixingLogic : MonoBehaviour
     }
 
     void SetBatterHeight(float t)
+{
+    if (batterVisual != null)
     {
-        if (batterVisual != null)
-        {
-            // t: 0 (empty) to 1 (full)
-            var scale = initialBatterScale;
-            scale.y = Mathf.Lerp(0.01f, initialBatterScale.y, t); // avoid 0
-            batterVisual.transform.localScale = scale;
-        }
+        var scale = initialBatterScale;
+        float maxHeight = initialBatterScale.y; // e.g., 0.2 in Inspector
+        scale.y = t * maxHeight; // 0 when t=0, maxHeight when t=1
+        batterVisual.transform.localScale = scale;
     }
+}
 
     public void AddIngredient(GameObject ingredient)
     {
