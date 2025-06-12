@@ -10,27 +10,27 @@ public class PourBatter : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log("Trigger met: " + other.name + " | Tag: " + other.tag);
+
         if (hasSpawned) return;
 
-        if (other.CompareTag("Bowl") && mixingLogic != null && mixingLogic.IsComplete())
+        // Batter object (dat de tag "Batter" heeft) wordt in de pan gegoten
+        if (other.CompareTag("Batter") && mixingLogic != null && mixingLogic.IsComplete())
         {
             SpawnPancake();
-        }
-    }
 
-    public void TrySpawnPancake()
-    {
-        if (hasSpawned) return;
-
-        if (mixingLogic != null && mixingLogic.IsComplete())
-        {
-            SpawnPancake();
+            // Verberg de batter visueel door de schaal op nul te zetten
+            if (mixingLogic.batterVisual != null)
+            {
+                mixingLogic.batterVisual.transform.localScale = Vector3.zero;
+            }
         }
     }
 
     void SpawnPancake()
     {
-        Instantiate(pancakePrefab, spawnPoint.position, spawnPoint.rotation);
+        Quaternion flatRotation = Quaternion.Euler(0, 0, 0); // vlak in pan
+        Instantiate(pancakePrefab, spawnPoint.position, flatRotation);
         hasSpawned = true;
         Debug.Log("Pannenkoek gespawned!");
     }

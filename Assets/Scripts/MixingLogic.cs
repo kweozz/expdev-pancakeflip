@@ -79,11 +79,7 @@ public class MixingLogic : MonoBehaviour
         if (batterRenderer != null)
             batterRenderer.material.color = completeColor;
 
-        var pourZone = FindAnyObjectByType<PourBatter>();
-        if (pourZone != null)
-        {
-            pourZone.TrySpawnPancake();
-        }
+        Debug.Log("Mengsel compleet!");
     }
 
     public bool IsComplete()
