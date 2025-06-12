@@ -19,11 +19,7 @@ public class PourBatter : MonoBehaviour
         {
             SpawnPancake();
 
-            // Verberg de batter visueel door de schaal op nul te zetten
-            if (mixingLogic.batterVisual != null)
-            {
-                mixingLogic.batterVisual.transform.localScale = Vector3.zero;
-            }
+        
         }
     }
 
