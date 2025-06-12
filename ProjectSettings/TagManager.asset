@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Anchor
   - Ingredient
+  - Pancake
+  - Bowl
+  - Batter
   layers:
   - Default
   - TransparentFX
@@ -40,6 +43,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0

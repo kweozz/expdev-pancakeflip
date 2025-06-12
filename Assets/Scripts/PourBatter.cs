@@ -18,16 +18,21 @@ public class PourBatter : MonoBehaviour
         if (other.CompareTag("Batter") && mixingLogic != null && mixingLogic.IsComplete())
         {
             SpawnPancake();
-
-        
         }
     }
 
     void SpawnPancake()
     {
         Quaternion flatRotation = Quaternion.Euler(0, 0, 0); // vlak in pan
-        Instantiate(pancakePrefab, spawnPoint.position, flatRotation);
+        GameObject pancake = Instantiate(pancakePrefab, spawnPoint.position, flatRotation);
         hasSpawned = true;
         Debug.Log("Pannenkoek gespawned!");
+
+        // Start het bakproces
+        PancakeFlip flipScript = pancake.GetComponent<PancakeFlip>();
+        if (flipScript != null)
+        {
+            flipScript.StartBaking();
+        }
     }
 }
