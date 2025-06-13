@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 72996716461637957}
   - component: {fileID: 1067858347616092098}
   - component: {fileID: 8304170103466056957}
-  - component: {fileID: 3678892054142930136}
   - component: {fileID: 7473790990310306288}
   - component: {fileID: -2057960188456796490}
+  - component: {fileID: 7534561380792142363}
   m_Layer: 5
   m_Name: pancake
   m_TagString: Pancake
@@ -89,29 +89,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &3678892054142930136
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3848369168748297695}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5000001
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
 --- !u!54 &7473790990310306288
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -153,3 +130,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bakeTime: 5
   tolerance: 1
+  flipForce: 4
+  spinTorque: 500
+--- !u!65 &7534561380792142363
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3848369168748297695}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 1
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.7, y: 3, z: 0.7}
+  m_Center: {x: 0.00000005960464, y: 0, z: -0.00000008940696}
