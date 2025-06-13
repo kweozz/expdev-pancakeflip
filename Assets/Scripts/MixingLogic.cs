@@ -17,6 +17,8 @@ public class MixingLogic : MonoBehaviour
 
     void Start()
     {
+        AudioManager.Instance.PlayMusic("lofi_background", 0.5f);
+
         if (batterVisual != null)
         {
             batterRenderer = batterVisual.GetComponent<Renderer>();
