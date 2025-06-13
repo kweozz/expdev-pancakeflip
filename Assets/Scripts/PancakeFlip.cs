@@ -1,8 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
-// Voor de Input System:
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
+using UnityEngine.XR;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PancakeFlip : MonoBehaviour
@@ -11,70 +9,95 @@ public class PancakeFlip : MonoBehaviour
     public float bakeTime  = 5f;
     public float tolerance = 1f;
 
+    [Header("Flip-kracht")]
+    public float flipForce  = 4f;
+    public float spinTorque = 500f;
+
+    // intern
     private float timer     = 0f;
-    private bool  isFlipped = false;
-    private bool  canFlip   = false;
     private bool  isBaking  = false;
+    private bool  canFlip   = false;
+    private bool  isFlipped = false;
+
+    // voor XR-input
+    private InputDevice rightHand;
+    private bool lastSecondaryButtonState = false;
 
     private Renderer rend;
-    private Material pancakeMaterial;
+    private Material pancakeMat;
     private readonly Color rawColor   = new Color(1f, 0.85f, 0.6f);
     private readonly Color brownColor = new Color(0.4f, 0.2f, 0.05f);
 
     void Awake()
     {
+        // maak materiaal instance
         rend = GetComponent<Renderer>();
         if (rend != null)
         {
-            // Instantieer materiaal-instance
-            pancakeMaterial      = rend.material;
-            pancakeMaterial.color = rawColor;
+            pancakeMat = rend.material;
+            pancakeMat.color = rawColor;
         }
 
-        // Zorg dat physics werkt (zodat de flip-kracht doorwerkt)
-        GetComponent<Rigidbody>().isKinematic = false;
+        // physics on
+        var rb = GetComponent<Rigidbody>();
+        rb.isKinematic = false;
+        rb.useGravity  = true;
+
+        // zoek de rechter controller
+        var devices = new List<InputDevice>();
+        InputDevices.GetDevicesAtXRNode(XRNode.RightHand, devices);
+        if (devices.Count > 0)
+            rightHand = devices[0];
     }
 
     void Update()
     {
-        // Alleen bakken/flips checken als we daadwerkelijk bakken
-        if (!isBaking || isFlipped || !canFlip) 
+        if (!isBaking || isFlipped)
             return;
 
+        // timer voor bakken + visuele kleur
         timer += Time.deltaTime;
-
-        // Maak de pannenkoek geleidelijk bruin
         float t = Mathf.Clamp01(timer / bakeTime);
-        if (pancakeMaterial != null)
-            pancakeMaterial.color = Color.Lerp(rawColor, brownColor, t);
+        if (pancakeMat != null)
+            pancakeMat.color = Color.Lerp(rawColor, brownColor, t);
 
-        // Input controleren
-        #if ENABLE_INPUT_SYSTEM
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            AttemptFlip();
-        #else
-        if (Input.GetKeyDown(KeyCode.Space))
-            AttemptFlip();
-        #endif
+        // zodra we binnen de tolerance-zone zitten, mag er ge-flippt worden
+        if (timer >= bakeTime - tolerance)
+            canFlip = true;
+
+        // lees B-knop (secondaryButton) van rechter controller
+        if (canFlip && rightHand.isValid)
+        {
+            bool secondaryButtonState;
+            if (rightHand.TryGetFeatureValue(CommonUsages.secondaryButton, out secondaryButtonState))
+            {
+                // detecteer druk-actie (rising edge)
+                if (secondaryButtonState && !lastSecondaryButtonState)
+                    AttemptFlip();
+
+                lastSecondaryButtonState = secondaryButtonState;
+            }
+        }
     }
 
     /// <summary>
-    /// Wordt aangeroepen door PourBatter juist nadat de pannenkoek gespawned is.
-    /// Vanaf dat moment mag hij gaan bakken én mag er ge-flippt worden.
+    /// Start het bakproces; roep dit aan zodra je 'm in de pan hebt gegoten.
     /// </summary>
     public void StartBaking()
     {
-        isBaking = true;
-        timer     = 0f;
-        canFlip   = true;
+        timer       = 0f;
+        isBaking    = true;
+        canFlip     = false;
+        isFlipped   = false;
+        lastSecondaryButtonState = false;
     }
 
     private void AttemptFlip()
     {
-        if (!canFlip || isFlipped) 
+        if (!canFlip || isFlipped)
             return;
 
-        canFlip = false;
+        isFlipped = true;
         float diff = Mathf.Abs(timer - bakeTime);
 
         if (diff <= tolerance)
@@ -89,11 +112,8 @@ public class PancakeFlip : MonoBehaviour
 
     private void PerformFlip()
     {
-        isFlipped = true;
-
         var rb = GetComponent<Rigidbody>();
-        // Forceer een opwaartse duw + rotatie
-        rb.AddForce(Vector3.up * 4f, ForceMode.Impulse);
-        rb.AddTorque(Vector3.right * 500f, ForceMode.Impulse);
+        rb.AddForce(Vector3.up * flipForce, ForceMode.Impulse);
+        rb.AddTorque(Vector3.right * spinTorque, ForceMode.Impulse);
     }
 }
