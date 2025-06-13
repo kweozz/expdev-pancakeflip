@@ -24,6 +24,8 @@ public class MixingLogic : MonoBehaviour
             batterRenderer.material.color = defaultColor;
             SetBatterHeight(0);
         }
+
+        UpdateIngredientListDisplay();
     }
 
     void SetBatterHeight(float t)
@@ -44,11 +46,7 @@ public class MixingLogic : MonoBehaviour
         if (!currentIngredients.Contains(name))
         {
             currentIngredients.Add(name);
-            if (feedbackText != null)
-            {
-                feedbackText.text += $"\n✓ {name} toegevoegd!";
-                Canvas.ForceUpdateCanvases();
-            }
+            UpdateIngredientListDisplay();
         }
 
         if (batterVisual != null && requiredIngredients.Count > 0)
@@ -58,6 +56,24 @@ public class MixingLogic : MonoBehaviour
         }
 
         CheckIfComplete();
+    }
+
+    void UpdateIngredientListDisplay()
+    {
+        if (feedbackText == null) return;
+
+        feedbackText.text = "Nog toe te voegen:\n";
+
+        foreach (var req in requiredIngredients)
+        {
+            string normalized = req.ToLower().Trim();
+            if (!currentIngredients.Contains(normalized))
+            {
+                feedbackText.text += $"- {req}\n";
+            }
+        }
+
+        Canvas.ForceUpdateCanvases();
     }
 
     void CheckIfComplete()
@@ -73,8 +89,9 @@ public class MixingLogic : MonoBehaviour
         if (currentIngredients.Count != requiredIngredients.Count) return;
 
         isComplete = true;
+
         if (feedbackText != null)
-            feedbackText.text += "\n✔ Mengsel compleet!";
+            feedbackText.text = "<color=green> <b> Mengsel compleet!</b></color>";
 
         if (batterRenderer != null)
             batterRenderer.material.color = completeColor;
