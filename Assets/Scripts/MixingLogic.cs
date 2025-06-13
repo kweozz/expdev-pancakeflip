@@ -47,6 +47,9 @@ public class MixingLogic : MonoBehaviour
         {
             currentIngredients.Add(name);
             UpdateIngredientListDisplay();
+
+            // ✅ Play sound when ingredient is added
+            AudioManager.Instance.PlaySound("success_ping");
         }
 
         if (batterVisual != null && requiredIngredients.Count > 0)
@@ -95,6 +98,9 @@ public class MixingLogic : MonoBehaviour
 
         if (batterRenderer != null)
             batterRenderer.material.color = completeColor;
+
+        // ✅ Optional: play the same or different sound when complete
+        AudioManager.Instance.PlaySound("success_ping");
 
         Debug.Log("Mengsel compleet!");
     }
