@@ -10,6 +10,11 @@ public class GameLogic : MonoBehaviour
     public Transform xrRig;
     public Transform xrSpawnPoint;
 
+    public PourBatter pourScript; // ← Koppel je PourBatter hieraan
+
+    public GameObject batterObject; // Sleep hier je beslag-object in via de inspector
+    public Transform batterStartPoint; // Sleep hier een lege GameObject als startpositie
+
     void Start()
     {
         introPanel.SetActive(true);
@@ -22,15 +27,30 @@ public class GameLogic : MonoBehaviour
         introPanel.SetActive(false);
         gameplayRoot.SetActive(true);
 
-         // Move XR rig to spawn location
-        if (xrRig != null && xrSpawnPoint != null)
-        xrRig.position = xrSpawnPoint.position;
+        if (xrRig && xrSpawnPoint)
+            xrRig.position = xrSpawnPoint.position;
     }
 
     public void GameComplete()
     {
         gameOverPanel.SetActive(true);
         gameplayRoot.SetActive(false);
+    }
+
+    public void PrepareRetry()
+    {
+        gameplayRoot.SetActive(true);
+        if (pourScript != null)
+            pourScript.ResetPour();
+
+        // Zet beslag terug naar startpositie
+        if (batterObject != null && batterStartPoint != null)
+        {
+            batterObject.transform.position = batterStartPoint.position;
+            batterObject.transform.rotation = batterStartPoint.rotation;
+        }
+
+        Debug.Log("🔁 Mislukte flip – giet opnieuw beslag om opnieuw te proberen.");
     }
 
     public void RestartGame()

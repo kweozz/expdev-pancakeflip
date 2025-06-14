@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
-using System.Collections.Generic;
+using UnityEngine.Events;
+using TMPro;
 
-[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Rigidbody), typeof(AudioSource))]
 public class PancakeFlip : MonoBehaviour
 {
     [Header("Baktijden")]
@@ -10,27 +12,35 @@ public class PancakeFlip : MonoBehaviour
     public float tolerance = 1f;
 
     [Header("Flip-instellingen")]
-    [Tooltip("Opwaartse impuls (lager = zachter)")]
     public float flipUpForce = 3f;
-    [Tooltip("Voorwaartse impuls (lager = kortere boog)")]
     public float flipForwardForce = 0.5f;
-    [Tooltip("Rotatietorque (lager = minder spin)")]
     public float spinTorque = 400f;
 
-    [Header("Pan referentie (sleep hier je pan in)")]
-    public Transform panTransform; // Sleep je pan hier in de Inspector
+    [Header("Pan referentie")]
+    public Transform panTransform;
 
-    // intern
+    [Header("Game Logic")]
+    public GameLogic gameLogic;
+
+    [Header("Feedback")]
+    public UnityEvent onPerfectFlip;
+    public UnityEvent onBadFlip;
+    public ParticleSystem successParticles;
+    public ParticleSystem failParticles;
+    public AudioClip successSFX;
+    public AudioClip failSFX;
+
+    [Header("UI")]
+    public Canvas feedbackCanvas;
+    public TextMeshProUGUI feedbackText;
+
     float timer;
     bool isBaking;
-    bool canFlip;
     bool isFlipped;
-
-    // XR‐input
     InputDevice rightHand;
     bool lastSecondaryButtonState;
 
-    // visuals
+    AudioSource aSource;
     Renderer rend;
     Material pancakeMat;
     readonly Color rawColor = new(1f, 0.85f, 0.6f);
@@ -38,7 +48,7 @@ public class PancakeFlip : MonoBehaviour
 
     void Awake()
     {
-        // Materiaal‐instance
+        aSource = GetComponent<AudioSource>();
         rend = GetComponent<Renderer>();
         if (rend)
         {
@@ -46,34 +56,27 @@ public class PancakeFlip : MonoBehaviour
             pancakeMat.color = rawColor;
         }
 
-        // Physics aanzetten
         var rb = GetComponent<Rigidbody>();
         rb.isKinematic = false;
         rb.useGravity = true;
 
-        // Rechter controller opzoeken
         var devices = new List<InputDevice>();
         InputDevices.GetDevicesAtXRNode(XRNode.RightHand, devices);
         if (devices.Count > 0) rightHand = devices[0];
+
+        if (feedbackCanvas) feedbackCanvas.enabled = false;
     }
 
     void Update()
     {
         if (!isBaking || isFlipped) return;
 
-        // Bak‐timer + visuele bruining
         timer += Time.deltaTime;
         float t = Mathf.Clamp01(timer / bakeTime);
         if (pancakeMat != null)
             pancakeMat.color = Color.Lerp(rawColor, brownColor, t);
 
-        // Vanaf binnen tolerance mag je flippen
-        if (timer >= bakeTime - tolerance)
-            canFlip = true;
-
-        // Lees B‐knop van controller
-        if (canFlip &&
-            rightHand.isValid &&
+        if (rightHand.isValid &&
             rightHand.TryGetFeatureValue(CommonUsages.secondaryButton, out bool state))
         {
             if (state && !lastSecondaryButtonState)
@@ -82,30 +85,50 @@ public class PancakeFlip : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Start het bakproces; roep aan vanuit PourBatter.SpawnPancake()
-    /// </summary>
     public void StartBaking()
     {
         timer = 0f;
         isBaking = true;
-        canFlip = false;
         isFlipped = false;
         lastSecondaryButtonState = false;
+        if (feedbackCanvas) feedbackCanvas.enabled = false; // feedback verbergen bij nieuwe poging
+        if (pancakeMat != null)
+            pancakeMat.color = rawColor;
     }
 
     void AttemptFlip()
     {
-        if (!canFlip || isFlipped) return;
+        if (isFlipped) return;
         isFlipped = true;
 
         float diff = Mathf.Abs(timer - bakeTime);
-        if (diff <= tolerance)
-            Debug.Log("✅ Perfect flip!");
-        else if (timer > bakeTime + tolerance)
-            Debug.Log("🔥 Te laat – verbrand!");
+        bool perfect = diff <= tolerance;
+
+        if (perfect)
+        {
+            onPerfectFlip.Invoke();
+            successParticles?.Play();
+            aSource.PlayOneShot(successSFX);
+            ShowFeedback("PERFECT!", Color.green);
+            gameLogic?.GameComplete();
+        }
         else
-            Debug.Log("🤢 Te vroeg – rauw!");
+        {
+            onBadFlip.Invoke();
+            failParticles?.Play();
+            aSource.PlayOneShot(failSFX);
+            ShowFeedback(
+                (timer > bakeTime
+                    ? "TE LAAT! Probeer opnieuw.\nBreng de kom opnieuw naar de pan."
+                    : "TE VROEG! Probeer opnieuw.\nBreng de kom opnieuw naar de pan."),
+                Color.red);
+
+            Destroy(gameObject, 1.5f); // verwijder pannenkoek na 1.5 seconden
+
+            if (gameLogic != null)
+                gameLogic.PrepareRetry(); // laat opnieuw beslag gieten
+        }
+
 
         PerformFlip();
     }
@@ -118,22 +141,26 @@ public class PancakeFlip : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Zet pancake boven het midden van de pan (alleen X en Z)
         if (panTransform != null)
-        {
             transform.position = new Vector3(
                 panTransform.position.x,
                 transform.position.y,
                 panTransform.position.z
-            );  
-        }
+            );
 
-        // Flip omhoog + een tikje vooruit (optioneel, pas flipForwardForce aan)
         Vector3 upImp = Vector3.up * flipUpForce;
         Vector3 fwdImp = Vector3.forward * flipForwardForce;
         rb.AddForce(upImp + fwdImp, ForceMode.Impulse);
-
-        // Rotatie om eigen X‐as
         rb.AddRelativeTorque(Vector3.right * spinTorque, ForceMode.Impulse);
+    }
+
+    void ShowFeedback(string message, Color col)
+    {
+        if (feedbackCanvas && feedbackText)
+        {
+            feedbackText.text = message;
+            feedbackText.color = col;
+            feedbackCanvas.enabled = true;
+        }
     }
 }

@@ -1,10 +1,24 @@
 using UnityEngine;
+using TMPro;
 
 public class PourBatter : MonoBehaviour
 {
+    [Header("Benodigdheden")]
     public MixingLogic mixingLogic;
     public GameObject pancakePrefab;
     public Transform spawnPoint;
+    public Transform panTransform;
+
+    [Header("Game Logica & UI")]
+    public GameLogic gameLogic;
+    public Canvas feedbackCanvas;
+    public TextMeshProUGUI feedbackText;
+
+    [Header("Feedback")]
+    public ParticleSystem successParticles;
+    public ParticleSystem failParticles;
+    public AudioClip successSFX;
+    public AudioClip failSFX;
 
     private bool hasSpawned = false;
 
@@ -28,11 +42,29 @@ public class PourBatter : MonoBehaviour
         hasSpawned = true;
         Debug.Log("Pannenkoek gespawned!");
 
-        // Start het bakproces
+        // Start het bakproces en geef alles door aan PancakeFlip
         PancakeFlip flipScript = pancake.GetComponent<PancakeFlip>();
         if (flipScript != null)
         {
+            flipScript.panTransform = panTransform;
+            flipScript.gameLogic = gameLogic;
+            flipScript.feedbackCanvas = feedbackCanvas;
+            flipScript.feedbackText = feedbackText;
+            flipScript.successParticles = successParticles;
+            flipScript.failParticles = failParticles;
+            flipScript.successSFX = successSFX;
+            flipScript.failSFX = failSFX;
+
             flipScript.StartBaking();
         }
+        else
+        {
+            Debug.LogWarning("Geen PancakeFlip script gevonden op prefab!");
+        }
+    }
+
+    public void ResetPour()
+    {
+        hasSpawned = false;
     }
 }
