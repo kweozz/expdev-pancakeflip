@@ -45,6 +45,9 @@ public class PancakeFlip : MonoBehaviour
     readonly Color rawColor = new(1f, 0.85f, 0.6f);
     readonly Color goldenBrownColor = new(0.8f, 0.5f, 0.2f);
     readonly Color brownColor = new(0.2f, 0.1f, 0.05f); // Darker brown color for burnt stage
+    [Header("Perfect flash instellingen")]
+    [Tooltip("Hoe snel de groene flash pulseert")]
+    public float flashSpeed = 4f;
 
     void Awake()
     {
@@ -69,27 +72,37 @@ public class PancakeFlip : MonoBehaviour
 
     void Update()
     {
-        if (!isBaking || isFlipped) return;
+        if (!isBaking || isFlipped)
+            return;
 
-        timer += Time.deltaTime / 4f; // Slow down the baking process by 5 times
-        float t = Mathf.Clamp01(timer / bakeTime);
+        // Versnelde timer (diviseer om langzamer te bakken)
+        timer += Time.deltaTime / 4f;
 
-        if (pancakeMat != null)
+        float underThreshold = bakeTime - tolerance;
+        float overThreshold = bakeTime + tolerance;
+
+        if (timer < underThreshold)
         {
-            if (timer < bakeTime / 2)
-            {
-                pancakeMat.color = Color.Lerp(rawColor, goldenBrownColor, t * 2);
-            }
-            else if (timer < bakeTime)
-            {
-                pancakeMat.color = Color.Lerp(goldenBrownColor, brownColor, (t - 0.5f) * 2);
-            }
-            else
-            {
-                pancakeMat.color = Color.Lerp(brownColor, new Color(0.1f, 0.05f, 0.05f), (t - 1f)); // Visibly darker burnt stage
-            }
+            // 1) Onderbakt: raw → golden
+            float t = timer / underThreshold;
+            pancakeMat.color = Color.Lerp(rawColor, goldenBrownColor, t);
+        }
+        else if (timer <= overThreshold)
+        {
+            // 2) Perfect window: pulse tussen golden en groen
+            float flash = Mathf.PingPong((timer - underThreshold) * flashSpeed, 1f);
+            pancakeMat.color = Color.Lerp(goldenBrownColor, Color.green, flash);
+        }
+        else
+        {
+            // 3) Verbrand fase: brown → dark burnt, over dezelfde duur als onderThreshold
+            float burntT = (timer - overThreshold) / underThreshold;
+            burntT = Mathf.Clamp01(burntT);
+            Color burntShade = new Color(0.1f, 0.05f, 0.05f);
+            pancakeMat.color = Color.Lerp(brownColor, burntShade, burntT);
         }
 
+        // Flip-input (B-knop)
         if (rightHand.isValid &&
             rightHand.TryGetFeatureValue(CommonUsages.secondaryButton, out bool state))
         {
@@ -98,6 +111,9 @@ public class PancakeFlip : MonoBehaviour
             lastSecondaryButtonState = state;
         }
     }
+
+
+
 
     public void StartBaking()
     {
