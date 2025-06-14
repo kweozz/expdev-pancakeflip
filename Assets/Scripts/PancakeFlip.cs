@@ -13,7 +13,6 @@ public class PancakeFlip : MonoBehaviour
 
     [Header("Flip-instellingen")]
     public float flipUpForce = 3f;
-    public float flipForwardForce = 0.5f;
     public float spinTorque = 400f;
 
     [Header("Pan referentie")]
@@ -164,8 +163,7 @@ public class PancakeFlip : MonoBehaviour
             );
 
         Vector3 upImp = Vector3.up * flipUpForce;
-        Vector3 fwdImp = Vector3.forward * flipForwardForce;
-        rb.AddForce(upImp + fwdImp, ForceMode.Impulse);
+        rb.AddForce(upImp, ForceMode.Impulse);
         rb.AddRelativeTorque(Vector3.right * spinTorque, ForceMode.Impulse);
     }
 
