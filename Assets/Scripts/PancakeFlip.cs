@@ -44,7 +44,8 @@ public class PancakeFlip : MonoBehaviour
     Renderer rend;
     Material pancakeMat;
     readonly Color rawColor = new(1f, 0.85f, 0.6f);
-    readonly Color brownColor = new(0.4f, 0.2f, 0.05f);
+    readonly Color goldenBrownColor = new(0.8f, 0.5f, 0.2f);
+    readonly Color brownColor = new(0.2f, 0.1f, 0.05f); // Darker brown color for burnt stage
 
     void Awake()
     {
@@ -71,10 +72,24 @@ public class PancakeFlip : MonoBehaviour
     {
         if (!isBaking || isFlipped) return;
 
-        timer += Time.deltaTime;
+        timer += Time.deltaTime / 4f; // Slow down the baking process by 5 times
         float t = Mathf.Clamp01(timer / bakeTime);
+
         if (pancakeMat != null)
-            pancakeMat.color = Color.Lerp(rawColor, brownColor, t);
+        {
+            if (timer < bakeTime / 2)
+            {
+                pancakeMat.color = Color.Lerp(rawColor, goldenBrownColor, t * 2);
+            }
+            else if (timer < bakeTime)
+            {
+                pancakeMat.color = Color.Lerp(goldenBrownColor, brownColor, (t - 0.5f) * 2);
+            }
+            else
+            {
+                pancakeMat.color = Color.Lerp(brownColor, new Color(0.1f, 0.05f, 0.05f), (t - 1f)); // Visibly darker burnt stage
+            }
+        }
 
         if (rightHand.isValid &&
             rightHand.TryGetFeatureValue(CommonUsages.secondaryButton, out bool state))
