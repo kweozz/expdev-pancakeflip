@@ -15,6 +15,8 @@ public class GameLogic : MonoBehaviour
     public GameObject batterObject; // Sleep hier je beslag-object in via de inspector
     public Transform batterStartPoint; // Sleep hier een lege GameObject als startpositie
 
+
+
     void Start()
     {
         introPanel.SetActive(true);
@@ -34,7 +36,7 @@ public class GameLogic : MonoBehaviour
     public void GameComplete()
     {
         gameOverPanel.SetActive(true);
-        gameplayRoot.SetActive(false);
+        // gameplayRoot.SetActive(false); // <-- deze regel UITZETTEN of verwijderen
     }
 
     public void PrepareRetry()
